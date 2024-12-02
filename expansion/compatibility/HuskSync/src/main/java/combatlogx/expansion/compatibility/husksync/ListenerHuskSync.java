@@ -64,9 +64,9 @@ public final class ListenerHuskSync extends ExpansionListener {
             printDebug("Punishments map did not contain player '" + playerId + "'. Ignoring.");
             return;
         }
-
         PlayerData playerData = new PlayerData(player, player.getLocation());
         playerData.setKeepInventory(e.getKeepInventory());
+        playerData.setItemsToKeep(e.getItemsToKeep());
         playerData.setKeepLevel(e.getKeepLevel());
         playerData.setTotalExperience(e.getNewTotalExp());
         playerData.setNewLevel(e.getNewLevel());
@@ -82,7 +82,7 @@ public final class ListenerHuskSync extends ExpansionListener {
         printDebug("Detected BukkitDataSaveEvent...");
 
         DataSnapshot.SaveCause saveCause = e.getSaveCause();
-        if (saveCause != DataSnapshot.SaveCause.DISCONNECT) {
+        if (!saveCause.getDisplayName().equalsIgnoreCase("DISCONNECT")) {
             printDebug("DataSaveCause is not 'DISCONNECT', ignoring event.");
             return;
         }
@@ -139,13 +139,17 @@ public final class ListenerHuskSync extends ExpansionListener {
             printDebug("Death event had keepInventory = false, fetching items...");
 
             ItemStack[] oldInventory = playerData.getOldInventory();
+            List<ItemStack> itemsToKeep = new ArrayList<>(playerData.getItemsToKeep());
             List<ItemStack> drops = new ArrayList<>();
             for (ItemStack stack : oldInventory) {
                 if (!ItemUtility.isAir(stack)) {
-                    drops.add(stack);
+                    if (!itemsToKeep.contains(stack)) {
+                        drops.add(stack);
+                    } else {
+                        itemsToKeep.remove(stack);
+                    }
                 }
             }
-
             Location location = playerData.getLocation();
             ConfigurablePlugin plugin = getJavaPlugin();
             DropItemsTask task = new DropItemsTask(plugin, location, drops);
@@ -154,7 +158,7 @@ public final class ListenerHuskSync extends ExpansionListener {
 
             Optional<Data.Items.Inventory> optionalInventory = unpacked.getInventory();
             Data.Items.Inventory inventory = optionalInventory.orElse(BukkitData.Items.Inventory.empty());
-            inventory.setContents(BukkitData.Items.Inventory.empty());
+            inventory.setContents(BukkitData.Items.Inventory.from(playerData.getItemsToKeep().toArray(new ItemStack[0]), 0));
             unpacked.setInventory(inventory);
             printDebug("Set HuskSync inventory to empty.");
         }

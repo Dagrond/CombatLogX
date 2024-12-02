@@ -6,11 +6,16 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public final class PlayerData {
     private final Player player;
     private final Location location;
 
     private ItemStack[] oldInventory;
+    private List<ItemStack> itemsToKeep;
     private boolean keepInventory;
     private boolean keepLevel;
     private int totalExperience;
@@ -21,6 +26,7 @@ public final class PlayerData {
         this.player = player;
         this.location = location;
         this.oldInventory = new ItemStack[0];
+        this.itemsToKeep = new ArrayList<>();
 
         this.keepInventory = false;
         this.keepLevel = false;
@@ -80,8 +86,14 @@ public final class PlayerData {
     public void setOldInventory(ItemStack @NotNull [] clone) {
         this.oldInventory = clone;
     }
+    public void setItemsToKeep(List<ItemStack> clone) {
+        this.itemsToKeep.addAll(clone);
+    }
 
     public ItemStack @NotNull [] getOldInventory() {
         return this.oldInventory;
+    }
+    public List<ItemStack> getItemsToKeep() {
+        return this.itemsToKeep;
     }
 }
